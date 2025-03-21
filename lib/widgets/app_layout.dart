@@ -1,55 +1,145 @@
 import 'package:flutter/material.dart';
 
-class AppLayout extends StatelessWidget {
+class AppLayout extends StatefulWidget {
   const AppLayout({super.key});
+
+  @override
+  State<AppLayout> createState() => _AppLayoutState();
+}
+
+class _AppLayoutState extends State<AppLayout> {
+  bool _isExtended = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          // 左侧导航栏
-          NavigationRail(
-            selectedIndex: 0,
-            onDestinationSelected: (int index) {
-              // TODO: 实现导航逻辑
-            },
-            labelType: NavigationRailLabelType.all,
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.timer),
-                label: Text('倒计时'),
+          Row(
+            children: [
+              // 左侧导航栏
+              NavigationRail(
+                selectedIndex: 0,
+                onDestinationSelected: (int index) {
+                  // TODO: 实现导航逻辑
+                },
+                extended: _isExtended,
+                minWidth: 80,
+                minExtendedWidth: 200,
+                backgroundColor: const Color(0xFF9683EC),
+                useIndicator: true,
+                indicatorColor: Colors.white.withOpacity(0.15),
+                indicatorShape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(24)),
+                ),
+                selectedIconTheme: const IconThemeData(
+                  color: Colors.white,
+                  size: 24,
+                ),
+                unselectedIconTheme: const IconThemeData(
+                  color: Color(0xFFE6E1FB),
+                  size: 22,
+                ),
+                selectedLabelTextStyle: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,  // 稍微加粗
+                  letterSpacing: 0.2,  // 轻微增加字间距
+                ),
+                unselectedLabelTextStyle: const TextStyle(
+                  color: Color(0xFFE6E1FB),
+                  fontSize: 16,
+                ),
+                destinations: const [
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    icon: Icon(Icons.timer),
+                    label: Text('倒计时'),
+                  ),
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    icon: Icon(Icons.list),
+                    label: Text('倒计时列表'),
+                  ),
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    icon: Icon(Icons.format_list_numbered),
+                    label: Text('数字倒计时风格'),
+                  ),
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    icon: Icon(Icons.pie_chart),
+                    label: Text('图表倒计时风格'),
+                  ),
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    icon: Icon(Icons.info),
+                    label: Text('关于'),
+                  ),
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    icon: Icon(Icons.settings),
+                    label: Text('设置'),
+                  ),
+                ],
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.list),
-                label: Text('倒计时列表'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.format_list_numbered),
-                label: Text('数字倒计时风格'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.pie_chart),
-                label: Text('图表倒计时风格'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.info),
-                label: Text('关于'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.settings),
-                label: Text('设置'),
+              if (_isExtended) 
+                Container(
+                  width: 1,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0x209683EC),
+                        Color(0xFF9683EC),
+                        Color(0x209683EC),
+                      ],
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF2D2B52),
+                        Color(0xFF1F1D36),
+                      ],
+                    ),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Content Area',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-          // 右侧内容区域
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: Container(
-              color: Theme.of(context).colorScheme.surface,
-              child: const Center(
-                child: Text('Content Area'),
+          // 收缩按钮
+          Positioned(
+            left: _isExtended ? 205 : 85,
+            top: 12,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon: Icon(
+                _isExtended ? Icons.chevron_left : Icons.chevron_right,
+                color: Colors.white,
+                size: 24,
               ),
+              onPressed: () {
+                setState(() {
+                  _isExtended = !_isExtended;
+                });
+              },
             ),
           ),
         ],
