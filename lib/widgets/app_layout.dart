@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:easy_timer/pages/timer/timer_page.dart';
+import 'package:easy_timer/pages/timer_list/timer_list_page.dart';
+import 'package:easy_timer/pages/number_style/number_style_page.dart';
+import 'package:easy_timer/pages/chart_style/chart_style_page.dart';
+import 'package:easy_timer/pages/about/about_page.dart';
+import 'package:easy_timer/pages/settings/settings_page.dart';
 
 class AppLayout extends StatefulWidget {
   const AppLayout({super.key});
@@ -9,6 +15,16 @@ class AppLayout extends StatefulWidget {
 
 class _AppLayoutState extends State<AppLayout> {
   bool _isExtended = true;
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = const [
+    TimerPage(),
+    TimerListPage(),
+    NumberStylePage(),
+    ChartStylePage(),
+    AboutPage(),
+    SettingsPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -19,16 +35,18 @@ class _AppLayoutState extends State<AppLayout> {
             children: [
               // 左侧导航栏
               NavigationRail(
-                selectedIndex: 0,
+                selectedIndex: _selectedIndex,
                 onDestinationSelected: (int index) {
-                  // TODO: 实现导航逻辑
+                  setState(() {
+                    _selectedIndex = index;
+                  });
                 },
                 extended: _isExtended,
                 minWidth: 80,
                 minExtendedWidth: 200,
                 backgroundColor: const Color(0xFF9683EC),
                 useIndicator: true,
-                indicatorColor: Colors.white.withOpacity(0.15),
+                indicatorColor: Colors.white.withAlpha(38),
                 indicatorShape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(24)),
                 ),
@@ -43,8 +61,8 @@ class _AppLayoutState extends State<AppLayout> {
                 selectedLabelTextStyle: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,  // 稍微加粗
-                  letterSpacing: 0.2,  // 轻微增加字间距
+                  fontWeight: FontWeight.w500, // 稍微加粗
+                  letterSpacing: 0.2, // 轻微增加字间距
                 ),
                 unselectedLabelTextStyle: const TextStyle(
                   color: Color(0xFFE6E1FB),
@@ -83,7 +101,7 @@ class _AppLayoutState extends State<AppLayout> {
                   ),
                 ],
               ),
-              if (_isExtended) 
+              if (_isExtended)
                 Container(
                   width: 1,
                   decoration: const BoxDecoration(
@@ -98,27 +116,17 @@ class _AppLayoutState extends State<AppLayout> {
                     ),
                   ),
                 ),
+              // 修改 Expanded 中的内容
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF2D2B52),
-                        Color(0xFF1F1D36),
-                      ],
+                      colors: [Color(0xFF2D2B52), Color(0xFF1F1D36)],
                     ),
                   ),
-                  child: const Center(
-                    child: Text(
-                      'Content Area',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
+                  child: _pages[_selectedIndex],
                 ),
               ),
             ],

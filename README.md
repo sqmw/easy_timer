@@ -1,5 +1,10 @@
 # Easy Timer
 
+@auther: sqmw
+@github: https://github.com/sqmw/
+@email: sq17127401791@gmail.com
+@version: 0.1.0
+
 一个功能强大的 Flutter 计时器应用，提供优雅的界面和丰富的计时功能。
 
 ## 应用预览
