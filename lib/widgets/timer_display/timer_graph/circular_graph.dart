@@ -1,22 +1,24 @@
-import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'base_timer_graph.dart';
 
-class CircularProgress extends StatefulWidget {
-  final Duration remainingTime;
-  final Duration totalTime;
-  final double size;
+enum CircularDisplayMode {
+  pie,
+  ring,
+}
+
+class CircularGraph extends BaseTimerGraph {
   final double strokeWidth;
   final bool clockwise;
   final Gradient? gradient;
   final Color? backgroundColor;
   final Color? foregroundColor;
 
-  const CircularProgress({
+  const CircularGraph({
     super.key,
-    required this.remainingTime,
-    required this.totalTime,
-    this.size = 200,
+    required super.remainingTime,
+    required super.totalTime,
+    required super.size,
     this.strokeWidth = 8,
     this.clockwise = true,
     this.gradient,
@@ -25,69 +27,38 @@ class CircularProgress extends StatefulWidget {
   });
 
   @override
-  State<CircularProgress> createState() => _CircularProgressState();
+  State<CircularGraph> createState() => _CircularGraphState();
 }
 
-class _CircularProgressState extends State<CircularProgress> {
-  late Timer _timer;
-  late Duration _currentTime;
-  bool _isPieMode = false;  // 添加显示模式状态
+class _CircularGraphState extends BaseTimerGraphState<CircularGraph> {
+  CircularDisplayMode _displayMode = CircularDisplayMode.ring;
 
-  @override
-  void initState() {
-    super.initState();
-    _currentTime = widget.remainingTime;
-    _startTimer();
-  }
-
-  @override
-  void didUpdateWidget(CircularProgress oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.remainingTime != widget.remainingTime) {
-      _currentTime = widget.remainingTime;
-    }
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_currentTime.inSeconds > 0) {
-        setState(() {
-          _currentTime = _currentTime - const Duration(seconds: 1);
-        });
-      } else {
-        _timer.cancel();
-      }
+  void _toggleDisplayMode() {
+    setState(() {
+      _displayMode = _displayMode == CircularDisplayMode.ring
+          ? CircularDisplayMode.pie
+          : CircularDisplayMode.ring;
     });
   }
 
   @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final progress = 1 - (_currentTime.inSeconds / widget.totalTime.inSeconds);
+    final progress = 1 - (currentTime.inSeconds / widget.totalTime.inSeconds);
     
     return GestureDetector(
-      onDoubleTap: () {
-        setState(() {
-          _isPieMode = !_isPieMode;
-        });
-      },
+      onDoubleTap: _toggleDisplayMode,
       child: SizedBox(
         width: widget.size,
         height: widget.size,
         child: CustomPaint(
-          painter: PieProgressPainter(
+          painter: CircularGraphPainter(
             progress: progress.clamp(0.0, 1.0),
             strokeWidth: widget.strokeWidth,
             clockwise: widget.clockwise,
             gradient: widget.gradient,
             backgroundColor: widget.backgroundColor ?? Theme.of(context).colorScheme.primary.withOpacity(0.2),
             foregroundColor: widget.foregroundColor ?? Theme.of(context).colorScheme.primary,
-            isPieMode: _isPieMode,
+            displayMode: _displayMode,
           ),
         ),
       ),
@@ -95,20 +66,20 @@ class _CircularProgressState extends State<CircularProgress> {
   }
 }
 
-class PieProgressPainter extends CustomPainter {
+class CircularGraphPainter extends CustomPainter {
   final double progress;
   final double strokeWidth;
   final bool clockwise;
   final Gradient? gradient;
   final Color backgroundColor;
   final Color foregroundColor;
-  final bool isPieMode;
+  final CircularDisplayMode displayMode;
 
-  PieProgressPainter({
+  CircularGraphPainter({
     required this.progress,
     required this.strokeWidth,
     required this.clockwise,
-    required this.isPieMode,
+    required this.displayMode,
     this.gradient,
     required this.backgroundColor,
     required this.foregroundColor,
@@ -116,8 +87,16 @@ class PieProgressPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final scale = 0.4;  // 添加缩放比例
+    final scaledSize = size.width * scale;
+    final offset = (size.width - scaledSize) / 2;
+    
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = isPieMode ? size.width / 2 : (size.width - strokeWidth) / 2;
+    final radius = displayMode == CircularDisplayMode.pie
+        ? scaledSize / 2
+        : (scaledSize - strokeWidth) / 2;
+    
+    final isPieMode = displayMode == CircularDisplayMode.pie;
     
     // 绘制背景
     final bgPaint = Paint()
@@ -146,22 +125,23 @@ class PieProgressPainter extends CustomPainter {
     final sweepAngle = 2 * pi * progress * (clockwise ? 1 : -1);
 
     // 绘制进度
+    // 绘制进度时使用缩放后的半径
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       startAngle,
       sweepAngle,
-      isPieMode,  // 根据模式决定是否填充
+      isPieMode,
       fgPaint,
     );
   }
 
   @override
-  bool shouldRepaint(covariant PieProgressPainter oldDelegate) {
+  bool shouldRepaint(covariant CircularGraphPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.strokeWidth != strokeWidth ||
         oldDelegate.clockwise != clockwise ||
         oldDelegate.backgroundColor != backgroundColor ||
         oldDelegate.foregroundColor != foregroundColor ||
-        oldDelegate.isPieMode != isPieMode;
+        oldDelegate.displayMode != displayMode;
   }
 }
