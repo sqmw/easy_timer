@@ -106,12 +106,8 @@ class TimerListPage extends StatelessWidget {
                   itemCount: provider.timers.length,
                   itemBuilder: (context, index) {
                     final timer = provider.timers[index];
-                    // 根据是否自动开始显示不同文案
-                    final startModeText = timer.isAutoStart ? '自动启动' : '手动启动';
-                    
                     return TimerListItem(
                       timer: timer,
-                      startModeText: startModeText, // 传递启动模式文案
                       onTap: () {
                         // 跳转到编辑页面
                         Navigator.push(

@@ -28,7 +28,11 @@ class _TimerEditPageState extends State<TimerEditPage> {
   
   // 声音ID
   late String _soundId;
-
+  
+  // 添加开始时间相关变量
+  // 在 _TimerEditPageState 类中添加以下变量
+  late DateTime? _startTime;
+  
   @override
   void initState() {
     super.initState();
@@ -43,6 +47,7 @@ class _TimerEditPageState extends State<TimerEditPage> {
       _seconds = (timer.duration.inSeconds % 60);
       _isAutoStart = timer.isAutoStart;
       _soundId = timer.soundId;
+      _startTime = timer.startTime;
     } else {
       // 新建模式
       _nameController = TextEditingController(text: '');
@@ -50,6 +55,7 @@ class _TimerEditPageState extends State<TimerEditPage> {
       _minutes = 5; // 默认5分钟
       _seconds = 0;
       _isAutoStart = false;
+      _startTime = null;
       
       // 获取默认声音ID
       final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
@@ -75,6 +81,9 @@ class _TimerEditPageState extends State<TimerEditPage> {
         seconds: _seconds,
       );
       
+      // 只有在自动启动开启时才使用开始时间
+      final startTime = _isAutoStart ? _startTime : null;
+      
       if (widget.timer == null) {
         // 创建新计时器
         timerProvider.createTimer(
@@ -82,6 +91,7 @@ class _TimerEditPageState extends State<TimerEditPage> {
           duration: duration,
           isAutoStart: _isAutoStart,
           soundId: _soundId,
+          startTime: startTime,
         );
       } else {
         // 更新现有计时器
@@ -90,12 +100,49 @@ class _TimerEditPageState extends State<TimerEditPage> {
           duration: duration,
           isAutoStart: _isAutoStart,
           soundId: _soundId,
+          startTime: startTime,
         );
         timerProvider.updateTimer(updatedTimer);
       }
       
       // 返回上一页
       Navigator.of(context).pop();
+    }
+  }
+
+  // 选择开始时间的方法
+  Future<void> _selectStartTime() async {
+    final DateTime now = DateTime.now();
+    final DateTime initialDate = _startTime ?? now;
+    
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    
+    if (pickedDate != null) {
+      final TimeOfDay initialTime = _startTime != null 
+          ? TimeOfDay.fromDateTime(_startTime!) 
+          : TimeOfDay.now();
+          
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: initialTime,
+      );
+      
+      if (pickedTime != null) {
+        setState(() {
+          _startTime = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
     }
   }
 
@@ -272,6 +319,7 @@ class _TimerEditPageState extends State<TimerEditPage> {
                   const SizedBox(height: 24),
                   
                   // 自动开始开关
+                  // 在自动开始开关后添加开始时间选择器
                   SwitchListTile(
                     title: const Text('自动开始'),
                     value: _isAutoStart,
@@ -281,6 +329,19 @@ class _TimerEditPageState extends State<TimerEditPage> {
                       });
                     },
                   ),
+                  
+                  // 添加开始时间选择器
+                  if (_isAutoStart) ...[
+                    const SizedBox(height: 16),
+                    ListTile(
+                      title: const Text('开始时间'),
+                      subtitle: Text(_startTime != null 
+                        ? '${_startTime!.year}-${_startTime!.month.toString().padLeft(2, '0')}-${_startTime!.day.toString().padLeft(2, '0')} ${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}'
+                        : '保存后立即开始'),
+                      trailing: const Icon(Icons.access_time),
+                      onTap: _selectStartTime,
+                    ),
+                  ],
                   
                   const SizedBox(height: 16),
                   

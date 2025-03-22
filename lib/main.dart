@@ -1,3 +1,4 @@
+import 'package:easy_timer/models/timer_item.dart';
 import 'package:easy_timer/providers/timer_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +11,7 @@ import 'package:easy_timer/providers/notification_provider.dart';
 import 'package:easy_timer/providers/update_provider.dart';
 import 'package:easy_timer/theme/app_theme.dart'; // 添加新的主题导入
 
+// 在应用初始化时设置自动启动提醒回调
 void main() {
   runApp(const MyApp());
 }
@@ -79,5 +81,37 @@ class MyApp extends StatelessWidget {
           return AppTheme.darkTheme(primaryColor: Colors.green);
       }
     }
+  }
+}
+
+// 自动启动提醒对话框
+class AutoStartReminderDialog extends StatelessWidget {
+  final TimerItem timer;
+  
+  const AutoStartReminderDialog({super.key, required this.timer});
+  
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('计时器即将自动启动'),
+      content: Text('计时器"${timer.name}"将在10秒后自动启动。'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('取消启动'),
+        ),
+        TextButton(
+          onPressed: () {
+            // 立即启动计时器
+            final timerProvider = Provider.of<TimerProvider>(context, listen: false);
+            timerProvider.startTimer(timer.id);
+            Navigator.of(context).pop();
+          },
+          child: const Text('立即启动'),
+        ),
+      ],
+    );
   }
 }

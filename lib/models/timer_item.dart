@@ -5,6 +5,7 @@ class TimerItem {
   final bool isAutoStart;
   final String soundId;
   final DateTime createdAt;
+  final DateTime? startTime; // 添加开始时间字段
 
   const TimerItem({
     required this.id,
@@ -13,9 +14,10 @@ class TimerItem {
     this.isAutoStart = false,
     required this.soundId,
     required this.createdAt,
+    this.startTime, // 开始时间可以为空
   });
 
-  // 添加 copyWith 方法
+  // 修改 copyWith 方法，添加 startTime 参数
   TimerItem copyWith({
     String? id,
     String? name,
@@ -23,6 +25,7 @@ class TimerItem {
     bool? isAutoStart,
     String? soundId,
     DateTime? createdAt,
+    DateTime? startTime,
   }) {
     return TimerItem(
       id: id ?? this.id,
@@ -31,6 +34,7 @@ class TimerItem {
       isAutoStart: isAutoStart ?? this.isAutoStart,
       soundId: soundId ?? this.soundId,
       createdAt: createdAt ?? this.createdAt,
+      startTime: startTime ?? this.startTime,
     );
   }
 }
