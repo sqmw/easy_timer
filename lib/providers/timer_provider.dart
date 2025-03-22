@@ -21,12 +21,46 @@ class TimerProvider extends ChangeNotifier {
   Timer? _ticker;
   Duration _remainingTime = Duration.zero;
   double _progress = 0.0;
+  Timer? _refreshTimer; // 添加刷新定时器
 
   // 构造函数，允许可选的通知提供者
   TimerProvider({NotificationProvider? notificationProvider})
     : _notificationProvider = notificationProvider {
     // 添加几个预设的计时器
     _initializeDefaultTimers();
+    
+    // 启动自动刷新
+    _startRefreshTimer();
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  // 添加自动刷新定时器
+  void _startRefreshTimer() {
+    _refreshTimer?.cancel();
+    
+    // 每分钟刷新一次UI，更新倒计时显示
+    _refreshTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      // 检查是否有即将开始的计时器
+      final now = DateTime.now();
+      bool needRefresh = false;
+      
+      for (final timer in _timers) {
+        if (timer.isEnabled && timer.startTime != null && timer.startTime!.isAfter(now)) {
+          needRefresh = true;
+          break;
+        }
+      }
+      
+      if (needRefresh) {
+        notifyListeners();
+      }
+    });
   }
 
   // 初始化默认计时器
@@ -37,7 +71,7 @@ class TimerProvider extends ChangeNotifier {
         id: const Uuid().v4(),
         name: '专注时间',
         duration: const Duration(minutes: 25),
-        isAutoStart: false,
+        isEnabled: true, // 修改参数名
         soundId: _notificationProvider?.defaultSound.id ?? 'default',
         createdAt: DateTime.now(),
       ),
@@ -45,7 +79,7 @@ class TimerProvider extends ChangeNotifier {
         id: const Uuid().v4(),
         name: '短休息',
         duration: const Duration(minutes: 5),
-        isAutoStart: false,
+        isEnabled: false,
         soundId: _notificationProvider?.defaultSound.id ?? 'default',
         createdAt: DateTime.now().add(const Duration(seconds: 1)),
       ),
@@ -53,7 +87,7 @@ class TimerProvider extends ChangeNotifier {
         id: const Uuid().v4(),
         name: '煮茶',
         duration: const Duration(minutes: 3),
-        isAutoStart: false,
+        isEnabled: false,
         soundId: _notificationProvider?.defaultSound.id ?? 'default',
         createdAt: DateTime.now().add(const Duration(seconds: 2)),
       ),
@@ -61,7 +95,7 @@ class TimerProvider extends ChangeNotifier {
         id: const Uuid().v4(),
         name: '冥想',
         duration: const Duration(minutes: 10),
-        isAutoStart: false,
+        isEnabled: false,
         soundId: _notificationProvider?.defaultSound.id ?? 'default',
         createdAt: DateTime.now().add(const Duration(seconds: 3)),
       ),
@@ -96,28 +130,28 @@ class TimerProvider extends ChangeNotifier {
   TimerItem createTimer({
     required String name,
     required Duration duration,
-    bool isAutoStart = false,
+    bool isEnabled = true, // 修改参数名和默认值
     String? soundId,
-    DateTime? startTime, // 添加开始时间参数
+    DateTime? startTime,
   }) {
     final id = const Uuid().v4();
     final timer = TimerItem(
       id: id,
       name: name,
       duration: duration,
-      isAutoStart: isAutoStart,
+      isEnabled: isEnabled, // 修改参数名
       soundId: soundId ?? _notificationProvider?.defaultSound.id ?? 'default',
       createdAt: DateTime.now(),
-      startTime: startTime, // 设置开始时间
+      startTime: startTime,
     );
-
+    
     addTimer(timer);
-
-    // 如果是自动启动且有开始时间，设置自动启动提醒
-    if (isAutoStart && startTime != null) {
+    
+    // 如果是启用状态且有开始时间，设置自动启动提醒
+    if (isEnabled && startTime != null) {
       _scheduleAutoStartReminder(timer);
     }
-
+    
     return timer;
   }
 
@@ -174,15 +208,24 @@ class TimerProvider extends ChangeNotifier {
   void updateTimer(TimerItem updatedTimer) {
     final index = _timers.indexWhere((timer) => timer.id == updatedTimer.id);
     if (index != -1) {
+      final oldTimer = _timers[index];
       _timers[index] = updatedTimer;
-
+  
+      // 如果启用状态发生变化，处理相关逻辑
+      if (oldTimer.isEnabled != updatedTimer.isEnabled) {
+        // 如果从未启用变为启用，且有开始时间，设置自动启动提醒
+        if (updatedTimer.isEnabled && updatedTimer.startTime != null) {
+          _scheduleAutoStartReminder(updatedTimer);
+        }
+      }
+  
       // 如果正在更新的是当前活动的计时器，则更新活动计时器
       if (_activeTimer != null && _activeTimer!.id == updatedTimer.id) {
         _activeTimer = updatedTimer;
         _remainingTime = updatedTimer.duration;
         _progress = 1.0;
       }
-
+  
       notifyListeners();
     }
   }
@@ -284,39 +327,53 @@ class TimerProvider extends ChangeNotifier {
     }
   }
 
-  // 按名称搜索计时器
-  List<TimerItem> searchTimers(String query) {
-    if (query.isEmpty) {
-      return _timers;
+  // 添加一个用于存储原始计时器列表的变量
+  List<TimerItem> _originalTimers = [];
+  
+  // 搜索计时器
+  void searchTimers(String keyword) {
+    if (_originalTimers.isEmpty) {
+      // 第一次搜索时，保存原始列表
+      _originalTimers = List.from(_timers);
     }
-
-    return _timers
-        .where(
-          (timer) => timer.name.toLowerCase().contains(query.toLowerCase()),
-        )
-        .toList();
+    
+    // 根据关键词过滤计时器
+    _timers = _originalTimers.where((timer) {
+      return timer.name.toLowerCase().contains(keyword.toLowerCase());
+    }).toList();
+    
+    notifyListeners();
+  }
+  
+  // 重置搜索结果
+  void resetSearch() {
+    if (_originalTimers.isNotEmpty) {
+      _timers = List.from(_originalTimers);
+      _originalTimers = [];
+      notifyListeners();
+    }
   }
 
   // 排序计时器
-  void sortTimers(String sortBy) {
+  void sortTimers(String sortBy, [bool ascending = true]) {
     switch (sortBy) {
       case 'name':
-        _timers.sort((a, b) => a.name.compareTo(b.name));
+        _timers.sort((a, b) => ascending 
+            ? a.name.compareTo(b.name) 
+            : b.name.compareTo(a.name));
         break;
       case 'duration':
-        _timers.sort((a, b) => a.duration.compareTo(b.duration));
+        _timers.sort((a, b) => ascending 
+            ? a.duration.compareTo(b.duration) 
+            : b.duration.compareTo(a.duration));
         break;
       case 'created':
-        _timers.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        _timers.sort((a, b) => ascending 
+            ? a.createdAt.compareTo(b.createdAt) 
+            : b.createdAt.compareTo(a.createdAt));
         break;
     }
     notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _ticker?.cancel();
-    super.dispose();
   }
 
   // 删除计时器
