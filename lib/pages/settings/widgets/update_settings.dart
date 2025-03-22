@@ -7,8 +7,10 @@ class UpdateSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Card(
-      color: Colors.white.withOpacity(0.1),
+      color: theme.colorScheme.surface.withAlpha(26),  // 使用 withAlpha 替代 withOpacity
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

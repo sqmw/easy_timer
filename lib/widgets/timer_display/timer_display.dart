@@ -16,32 +16,44 @@ class TimerDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return GestureDetector(
-      onTap: onToggleFullScreen,
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 左侧数字倒计时
-            Expanded(
-              child: DigitalTimerDisplay(
+    Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Stack(
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 上方数字倒计时
+              DigitalTimerDisplay(
                 remainingTime: remainingTime,
                 isFullScreen: isFullScreen,
               ),
-            ),
-            const SizedBox(width: 32),
-            // 右侧图形化倒计时
-            Expanded(
-              child: GraphicalTimerDisplay(
-                progress: progress,
-                isFullScreen: isFullScreen,
+              const SizedBox(height: 32),
+              // 下方图形化倒计时，占据更多空间
+              Expanded(
+                flex: 3,
+                child: GraphicalTimerDisplay(
+                  progress: progress,
+                  isFullScreen: isFullScreen,
+                ),
               ),
+            ],
+          ),
+          // 右上角全屏按钮
+          Positioned(
+            top: 0,
+            right: 0,
+            child: IconButton(
+              icon: Icon(
+                isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+                size: 28,
+              ),
+              onPressed: onToggleFullScreen,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -120,10 +132,7 @@ class DigitalTimerDisplay extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
         separator,
-        style: const TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-        ),
+        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -133,11 +142,13 @@ class DigitalTimerDisplay extends StatelessWidget {
 class GraphicalTimerDisplay extends StatelessWidget {
   final double progress;
   final bool isFullScreen;
+  final VoidCallback? onToggleFullScreen;
 
   const GraphicalTimerDisplay({
     super.key,
     required this.progress,
     required this.isFullScreen,
+    this.onToggleFullScreen,
   });
 
   @override
@@ -148,26 +159,11 @@ class GraphicalTimerDisplay extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: Stack(
-        children: [
-          CircularProgressIndicator(
-            value: progress,
-            strokeWidth: isFullScreen ? 12 : 8,
-            backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
-            color: theme.colorScheme.primary,
-          ),
-          if (!isFullScreen)
-            Positioned(
-              right: 0,
-              top: 0,
-              child: IconButton(
-                icon: const Icon(Icons.fullscreen),
-                onPressed: () {
-                  // TODO: 实现全屏切换
-                },
-              ),
-            ),
-        ],
+      child: CircularProgressIndicator(
+        value: progress,
+        strokeWidth: isFullScreen ? 12 : 8,
+        backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+        color: theme.colorScheme.primary,
       ),
     );
   }
