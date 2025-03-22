@@ -1,3 +1,4 @@
+import 'package:easy_timer/const/assets.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -26,7 +27,7 @@ class NotificationProvider extends ChangeNotifier {
   Sound _defaultSound = const Sound(
     id: 'bell',
     name: '清脆铃声',
-    assetPath: 'assets/sounds/bell.mp3',
+    assetPath: Assets.assets_sounds_bell_mp3,
     icon: Icons.notifications_active,
   );
 
@@ -40,31 +41,31 @@ class NotificationProvider extends ChangeNotifier {
     Sound(
       id: 'bell',
       name: '清脆铃声',
-      assetPath: 'assets/sounds/bell.mp3',
+      assetPath: Assets.assets_sounds_bell_mp3,
       icon: Icons.notifications_active,
     ),
     Sound(
       id: 'digital',
       name: '数字提示音',
-      assetPath: 'assets/sounds/digital.mp3',
+      assetPath: Assets.assets_sounds_digital_mp3,
       icon: Icons.watch,
     ),
     Sound(
       id: 'gentle',
       name: '温和提醒',
-      assetPath: 'assets/sounds/gentle.mp3',
+      assetPath: Assets.assets_sounds_gentle_mp3,
       icon: Icons.waves,
     ),
     Sound(
       id: 'nature',
       name: '自然之声',
-      assetPath: 'assets/sounds/nature.mp3',
+      assetPath: Assets.assets_sounds_nature_mp3,
       icon: Icons.nature,
     ),
     Sound(
       id: 'alert',
       name: '警报声',
-      assetPath: 'assets/sounds/alert.mp3',
+      assetPath: Assets.assets_sounds_alert_mp3,
       icon: Icons.warning_amber,
     ),
   ];
@@ -154,23 +155,53 @@ class NotificationProvider extends ChangeNotifier {
   // 设置默认铃声
   Future<void> setDefaultSound(Sound sound) async {
     if (_defaultSound.id == sound.id) return;
-
+  
     _defaultSound = sound;
-
+    notifyListeners(); // 立即通知界面更新
+  
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_soundKey, sound.id);
-
-    notifyListeners();
   }
 
   // 播放声音
+  Sound? _playingSound;
+  
+  // 添加这个方法来检查指定的声音是否正在播放
+  bool isPlayingSound(Sound sound) {
+    return _playingSound?.id == sound.id;
+  }
+
+  // 修改播放声音的方法
   Future<void> playSound(Sound sound) async {
-    await _audioPlayer.stop();
-    await _audioPlayer.play(AssetSource(sound.assetPath));
+    if (_playingSound?.id == sound.id) {
+      await stopSound();
+      return;
+    }
+    
+    await stopSound();
+    _playingSound = sound;
+    
+    // 检查路径是否已经包含 'assets/' 前缀，如果包含则直接使用，否则添加前缀
+    final String path = sound.assetPath.startsWith('assets/') 
+        ? sound.assetPath.substring(7) // 移除开头的 'assets/'
+        : sound.assetPath;
+    await _audioPlayer.play(AssetSource(path));
+    
+    notifyListeners();
+  }
+
+  // 添加停止播放的方法
+  Future<void> stopSound() async {
+    if (_playingSound != null) {
+      await _audioPlayer.stop();
+      _playingSound = null;
+      notifyListeners();
+    }
   }
 
   @override
   void dispose() {
+    stopSound();
     _audioPlayer.dispose();
     super.dispose();
   }

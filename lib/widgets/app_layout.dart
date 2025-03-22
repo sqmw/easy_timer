@@ -17,7 +17,7 @@ class _AppLayoutState extends State<AppLayout> {
   bool _isExtended = true;
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [
+  final List<Widget> _pages = [
     TimerPage(),
     TimerListPage(),
     NumberStylePage(),

@@ -93,3 +93,7 @@
 ```bash
 git clone https://github.com/sqmw/easy_timer.git
 ```
+
+```
+agen -t d --no-save -r lwu -f assets/ -o lib/const/
+```

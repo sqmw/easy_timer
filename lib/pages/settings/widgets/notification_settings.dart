@@ -11,11 +11,11 @@ class NotificationSettings extends StatelessWidget {
     
     return Card(
       elevation: 0,
-      color: theme.colorScheme.surface.withOpacity(0.1),
+      color: theme.colorScheme.surface.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: theme.colorScheme.primary.withOpacity(0.1),
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -65,57 +65,67 @@ class NotificationSettings extends StatelessWidget {
   }
 
   Widget _buildSoundSelector(BuildContext context, NotificationProvider provider, ThemeData theme) {
-    return InkWell(
-      onTap: () => _showSoundPicker(context, provider),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              provider.defaultSound.icon,
-              color: theme.colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '默认铃声',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    provider.defaultSound.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.play_circle_outline,
+    return Consumer<NotificationProvider>(
+      builder: (context, provider, child) => InkWell(
+        onTap: () => _showSoundPicker(context, provider),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                provider.defaultSound.icon,
                 color: theme.colorScheme.primary,
-                size: 28,
+                size: 24,
               ),
-              onPressed: () => provider.playSound(provider.defaultSound),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
-              size: 16,
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '当前铃声',  // 将 '默认铃声' 改为 '当前铃声'
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      provider.defaultSound.name,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  provider.isPlayingSound(provider.defaultSound)
+                      ? Icons.pause_circle_outline
+                      : Icons.play_circle_outline,
+                  color: theme.colorScheme.primary,
+                  size: 28,
+                ),
+                onPressed: () {
+                  if (provider.isPlayingSound(provider.defaultSound)) {
+                    provider.stopSound();
+                  } else {
+                    provider.playSound(provider.defaultSound);
+                  }
+                },
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                size: 16,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -125,14 +135,14 @@ class NotificationSettings extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.05),
+        color: theme.colorScheme.surface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
           Icon(
             Icons.desktop_windows_outlined,
-            color: theme.colorScheme.onSurface.withOpacity(0.8),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
             size: 20,
           ),
           const SizedBox(width: 16),
@@ -247,77 +257,93 @@ class NotificationSettings extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  Text(
-                    '选择铃声',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: provider.availableSounds.length,
-                itemBuilder: (context, index) {
-                  final sound = provider.availableSounds[index];
-                  final isSelected = provider.defaultSound.id == sound.id;
-                  
-                  return ListTile(
-                    leading: Icon(
-                      sound.icon,
-                      color: isSelected 
-                          ? theme.colorScheme.primary 
-                          : theme.colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                    title: Text(
-                      sound.name,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.play_circle_outline,
-                            color: theme.colorScheme.primary,
-                          ),
-                          onPressed: () => provider.playSound(sound),
+      builder: (context) => Consumer<NotificationProvider>(  // 添加 Consumer 来监听播放状态变化
+        builder: (context, provider, child) => StatefulBuilder(
+          builder: (context, setState) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: [
+                      Text(
+                        '选择铃声',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
-                        if (isSelected)
-                          Icon(
-                            Icons.check_circle,
-                            color: theme.colorScheme.primary,
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: provider.availableSounds.length,
+                    itemBuilder: (context, index) {
+                      final sound = provider.availableSounds[index];
+                      final isSelected = provider.defaultSound.id == sound.id;
+                      
+                      return ListTile(
+                        leading: Icon(
+                          sound.icon,
+                          color: isSelected 
+                              ? theme.colorScheme.primary 
+                              : theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                        title: Text(
+                          sound.name,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                           ),
-                      ],
-                    ),
-                    onTap: () {
-                      provider.setDefaultSound(sound);
-                      Navigator.pop(context);
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                provider.isPlayingSound(sound)
+                                    ? Icons.pause_circle_outline
+                                    : Icons.play_circle_outline,
+                                color: theme.colorScheme.primary,
+                              ),
+                              onPressed: () {
+                                if (provider.isPlayingSound(sound)) {
+                                  provider.stopSound();
+                                } else {
+                                  provider.playSound(sound);
+                                }
+                                // 移除 setState，因为现在使用 Consumer 来更新
+                              },
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle,
+                                color: theme.colorScheme.primary,
+                              ),
+                          ],
+                        ),
+                        onTap: () async {
+                          await provider.setDefaultSound(sound);
+                          setState(() {}); // 更新底部弹窗的状态
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                        },
+                      );
                     },
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

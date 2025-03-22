@@ -1,3 +1,4 @@
+import 'package:easy_timer/providers/timer_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +24,14 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => UpdateProvider()),
+        ChangeNotifierProxyProvider<NotificationProvider, TimerProvider>(
+          create: (_) => TimerProvider(),
+          update: (_, notificationProvider, timerProvider) {
+            timerProvider ??= TimerProvider();
+            timerProvider.setNotificationProvider(notificationProvider);
+            return timerProvider;
+          },
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
