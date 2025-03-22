@@ -1,8 +1,6 @@
-import 'package:easy_timer/widgets/timer_display/timer_display.dart';
+import 'package:easy_timer/widgets/timer_display/circular_progress.dart';
 import 'package:easy_timer/widgets/timer_display/flip_timer_display.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:easy_timer/providers/timer_provider.dart';
 
 class TimerPage extends StatefulWidget {
   const TimerPage({Key? key}) : super(key: key);
@@ -14,8 +12,31 @@ class TimerPage extends StatefulWidget {
 class _TimerPageState extends State<TimerPage> {
   bool _isFullScreen = false;
 
+  String _formatDuration(Duration duration) {
+    final days = duration.inDays;
+    final hours = duration.inHours.remainder(24);
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+    
+    final parts = <String>[];
+    if (days > 0) parts.add('$days天');
+    if (hours > 0) parts.add('$hours小时');
+    if (minutes > 0) parts.add('$minutes分钟');
+    if (seconds > 0) parts.add('$seconds秒');
+    
+    return parts.isEmpty ? '0秒' : parts.join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final remainingTime = const Duration(
+      days: 0,
+      hours: 0,
+      minutes: 30,
+      seconds: 26,
+    );
+    final totalTime = const Duration(hours: 1,minutes: 1);
+
     return Scaffold(
       body: Stack(
         children: [
@@ -23,22 +44,30 @@ class _TimerPageState extends State<TimerPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 使用新的翻转式倒计时
+                // 添加总时长显示
+                Text(
+                  '总时长: ${_formatDuration(totalTime)}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
                 FlipTimerDisplay(
-                  remainingTime: const Duration(days: 1, hours: 21, minutes: 34, seconds: 26),
+                  remainingTime: remainingTime,
                   isFullScreen: _isFullScreen,
                 ),
                 const SizedBox(height: 32),
-                // 图形化倒计时
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: SizedBox(
                     height: 200,
-                    child: CircularProgressIndicator(
-                      value: 0.75,
+                    child: CircularProgress(
+                      remainingTime: remainingTime,
+                      totalTime: totalTime,
+                      size: 200,
                       strokeWidth: 8,
-                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
