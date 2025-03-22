@@ -5,6 +5,7 @@ import 'package:easy_timer/pages/number_style/number_style_page.dart';
 import 'package:easy_timer/pages/chart_style/chart_style_page.dart';
 import 'package:easy_timer/pages/about/about_page.dart';
 import 'package:easy_timer/pages/settings/settings_page.dart';
+import 'package:easy_timer/theme/app_colors.dart';
 
 class AppLayout extends StatefulWidget {
   const AppLayout({super.key});
@@ -44,28 +45,28 @@ class _AppLayoutState extends State<AppLayout> {
                 extended: _isExtended,
                 minWidth: 80,
                 minExtendedWidth: 200,
-                backgroundColor: const Color(0xFF9683EC),
+                backgroundColor: AppColors.primary,
                 useIndicator: true,
-                indicatorColor: Colors.white.withAlpha(38),
+                indicatorColor: AppColors.indicatorOnPrimary,
                 indicatorShape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(24)),
                 ),
                 selectedIconTheme: const IconThemeData(
-                  color: Colors.white,
+                  color: AppColors.textOnPrimary,
                   size: 24,
                 ),
                 unselectedIconTheme: const IconThemeData(
-                  color: Color(0xFFE6E1FB),
+                  color: AppColors.textSecondaryOnPrimary,
                   size: 22,
                 ),
                 selectedLabelTextStyle: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textOnPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w500, // 稍微加粗
                   letterSpacing: 0.2, // 轻微增加字间距
                 ),
                 unselectedLabelTextStyle: const TextStyle(
-                  color: Color(0xFFE6E1FB),
+                  color: AppColors.textSecondaryOnPrimary,
                   fontSize: 16,
                 ),
                 destinations: const [
@@ -109,9 +110,9 @@ class _AppLayoutState extends State<AppLayout> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Color(0x209683EC),
-                        Color(0xFF9683EC),
-                        Color(0x209683EC),
+                        AppColors.primaryWithOpacity20,
+                        AppColors.primary,
+                        AppColors.primaryWithOpacity20,
                       ],
                     ),
                   ),
@@ -123,7 +124,7 @@ class _AppLayoutState extends State<AppLayout> {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFF2D2B52), Color(0xFF1F1D36)],
+                      colors: [AppColors.backgroundLight, AppColors.backgroundDark],
                     ),
                   ),
                   child: _pages[_selectedIndex],
@@ -140,7 +141,7 @@ class _AppLayoutState extends State<AppLayout> {
               constraints: const BoxConstraints(),
               icon: Icon(
                 _isExtended ? Icons.chevron_left : Icons.chevron_right,
-                color: Colors.white,
+                color: AppColors.textOnPrimary,
                 size: 24,
               ),
               onPressed: () {

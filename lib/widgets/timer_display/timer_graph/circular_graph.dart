@@ -87,7 +87,7 @@ class CircularGraphPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = 0.4;  // 添加缩放比例
+    final scale = 1;  // 添加缩放比例
     final scaledSize = size.width * scale;
     final offset = (size.width - scaledSize) / 2;
     

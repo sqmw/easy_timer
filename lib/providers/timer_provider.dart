@@ -22,7 +22,52 @@ class TimerProvider extends ChangeNotifier {
   
   // 构造函数，允许可选的通知提供者
   TimerProvider({NotificationProvider? notificationProvider}) 
-      : _notificationProvider = notificationProvider;
+      : _notificationProvider = notificationProvider {
+    // 添加几个预设的计时器
+    _initializeDefaultTimers();
+  }
+  
+  // 初始化默认计时器
+  void _initializeDefaultTimers() {
+    // 添加几个常用的计时器预设
+    final defaultTimers = [
+      TimerItem(
+        id: const Uuid().v4(),
+        name: '专注时间',
+        duration: const Duration(minutes: 25),
+        isAutoStart: false,
+        soundId: _notificationProvider?.defaultSound.id ?? 'default',
+        createdAt: DateTime.now(),
+      ),
+      TimerItem(
+        id: const Uuid().v4(),
+        name: '短休息',
+        duration: const Duration(minutes: 5),
+        isAutoStart: false,
+        soundId: _notificationProvider?.defaultSound.id ?? 'default',
+        createdAt: DateTime.now().add(const Duration(seconds: 1)),
+      ),
+      TimerItem(
+        id: const Uuid().v4(),
+        name: '煮茶',
+        duration: const Duration(minutes: 3),
+        isAutoStart: false,
+        soundId: _notificationProvider?.defaultSound.id ?? 'default',
+        createdAt: DateTime.now().add(const Duration(seconds: 2)),
+      ),
+      TimerItem(
+        id: const Uuid().v4(),
+        name: '冥想',
+        duration: const Duration(minutes: 10),
+        isAutoStart: false,
+        soundId: _notificationProvider?.defaultSound.id ?? 'default',
+        createdAt: DateTime.now().add(const Duration(seconds: 3)),
+      ),
+    ];
+    
+    // 将默认计时器添加到列表中
+    _timers.addAll(defaultTimers);
+  }
   
   // 设置通知提供者的方法
   void setNotificationProvider(NotificationProvider provider) {
@@ -78,19 +123,16 @@ class TimerProvider extends ChangeNotifier {
   }
   
   // 更新计时器
-  void updateTimer(TimerItem timer) {
-    final index = _timers.indexWhere((t) => t.id == timer.id);
+  void updateTimer(TimerItem updatedTimer) {
+    final index = _timers.indexWhere((timer) => timer.id == updatedTimer.id);
     if (index != -1) {
-      _timers[index] = timer;
+      _timers[index] = updatedTimer;
       
-      // 如果更新的是当前活动计时器，也更新活动计时器
-      if (_activeTimer?.id == timer.id) {
-        _activeTimer = timer;
-        
-        // 如果计时器正在运行，需要重新计算进度
-        if (_status == TimerStatus.running || _status == TimerStatus.paused) {
-          _updateProgress();
-        }
+      // 如果正在更新的是当前活动的计时器，则更新活动计时器
+      if (_activeTimer != null && _activeTimer!.id == updatedTimer.id) {
+        _activeTimer = updatedTimer;
+        _remainingTime = updatedTimer.duration;
+        _progress = 1.0;
       }
       
       notifyListeners();
@@ -225,5 +267,15 @@ class TimerProvider extends ChangeNotifier {
   void dispose() {
     _ticker?.cancel();
     super.dispose();
+  }
+  
+  // 删除计时器
+  void deleteTimer(String id) {
+    // 查找并删除指定ID的计时器
+    _timers.removeWhere((timer) => timer.id == id);
+    
+    // 通知监听器更新UI
+    notifyListeners();
+    
   }
 }

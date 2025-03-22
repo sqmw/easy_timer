@@ -1,10 +1,10 @@
 // 将原来的 CircularProgress 替换为 TimerGraphContainer
-import 'package:easy_timer/widgets/timer_display/timer_graph/timer_graph_container.dart';
+import 'package:easy_timer/widgets/timer_display/timer_graph/circular_graph.dart';
 import 'package:easy_timer/widgets/timer_display/flip_timer_display.dart';
 import 'package:flutter/material.dart';
 
 class TimerPage extends StatefulWidget {
-  const TimerPage({Key? key}) : super(key: key);
+  const TimerPage({super.key});
 
   @override
   State<TimerPage> createState() => _TimerPageState();
@@ -30,12 +30,8 @@ class _TimerPageState extends State<TimerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final remainingTime = const Duration(
-      days: 0,
-      hours: 0,
-      minutes: 0,
-      seconds: 45,
-    );
+    // 修改初始时间设置
+    final remainingTime = const Duration(minutes: 1);
     final totalTime = const Duration(minutes: 1);
 
     return Scaffold(
@@ -64,7 +60,7 @@ class _TimerPageState extends State<TimerPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: SizedBox(
                     height: 300,
-                    child: TimerGraphContainer(
+                    child: CircularGraph(
                       remainingTime: remainingTime,
                       totalTime: totalTime,
                       size: 300,

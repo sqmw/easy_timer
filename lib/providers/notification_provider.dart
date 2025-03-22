@@ -155,17 +155,17 @@ class NotificationProvider extends ChangeNotifier {
   // 设置默认铃声
   Future<void> setDefaultSound(Sound sound) async {
     if (_defaultSound.id == sound.id) return;
-  
+
     _defaultSound = sound;
     notifyListeners(); // 立即通知界面更新
-  
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_soundKey, sound.id);
   }
 
   // 播放声音
   Sound? _playingSound;
-  
+
   // 添加这个方法来检查指定的声音是否正在播放
   bool isPlayingSound(Sound sound) {
     return _playingSound?.id == sound.id;
@@ -177,16 +177,17 @@ class NotificationProvider extends ChangeNotifier {
       await stopSound();
       return;
     }
-    
+
     await stopSound();
     _playingSound = sound;
-    
+
     // 检查路径是否已经包含 'assets/' 前缀，如果包含则直接使用，否则添加前缀
-    final String path = sound.assetPath.startsWith('assets/') 
-        ? sound.assetPath.substring(7) // 移除开头的 'assets/'
-        : sound.assetPath;
+    final String path =
+        sound.assetPath.startsWith('assets/')
+            ? sound.assetPath.substring(7) // 移除开头的 'assets/'
+            : sound.assetPath;
     await _audioPlayer.play(AssetSource(path));
-    
+    print(path);
     notifyListeners();
   }
 
@@ -197,6 +198,32 @@ class NotificationProvider extends ChangeNotifier {
       _playingSound = null;
       notifyListeners();
     }
+  }
+
+  // 添加预览声音的方法
+  // 在 NotificationProvider 类中修改 previewSound 方法
+  AudioPlayer previewSound(String soundId) {
+    // 查找对应的声音
+    final sound = _availableSounds.firstWhere(
+      (sound) => sound.id == soundId,
+      orElse: () => _defaultSound,
+    );
+    // 创建一个新的播放器实例
+    final player = AudioPlayer();
+    try {
+      // 修改这里：使用正确的资源路径格式
+      // 从 Assets 类获取的路径已经包含 'assets/' 前缀
+      // 但 AudioPlayer.play(AssetSource()) 会再添加一次
+      // 所以需要移除路径中的 'assets/' 前缀
+      String assetPath = sound.assetPath;
+      if (assetPath.startsWith('assets/')) {
+        assetPath = assetPath.substring(7); // 移除 'assets/' 前缀
+      }
+      player.play(AssetSource(assetPath));
+    } catch (e) {
+      debugPrint('播放声音预览失败: $e');
+    }
+    return player;
   }
 
   @override
