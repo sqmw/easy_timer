@@ -23,5 +23,5 @@ class Assets {
   static const String assets_sounds_nature_mp3 = 'assets/sounds/nature.mp3';
 
   static const String assets_web_timer_digit_timer_flip_timer_html =
-      'assets/web/timer/digit-timer/flip_timer.html';
+      'assets/web/timer/digit-timer/flip-timer.html';
 }

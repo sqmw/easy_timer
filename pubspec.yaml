@@ -41,6 +41,5 @@ flutter:
 
     - assets/images/
     - assets/sounds/
-    - assets/web/timer/digit-timer/
 
   # assets end
