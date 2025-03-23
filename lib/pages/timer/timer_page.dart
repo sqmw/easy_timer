@@ -30,62 +30,88 @@ class _TimerPageState extends State<TimerPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 修改初始时间设置
+    final theme = Theme.of(context);
     final remainingTime = const Duration(minutes: 1);
     final totalTime = const Duration(minutes: 1);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          Center(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // 计算合适的尺寸
+          final screenWidth = constraints.maxWidth;
+          final screenHeight = constraints.maxHeight;
+          final minDimension = screenWidth < screenHeight ? screenWidth : screenHeight;
+
+          // 计算各组件的大小
+          final graphSize = minDimension * 0.5;
+          final spacing = minDimension * 0.03;
+
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 添加总时长显示
                 Text(
                   '总时长: ${_formatDuration(totalTime)}',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
+                    fontSize: minDimension * 0.04,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: spacing),
                 FlipTimerDisplay(
                   remainingTime: remainingTime,
                   isFullScreen: _isFullScreen,
                 ),
-                const SizedBox(height: 32),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: SizedBox(
-                    height: 300,
-                    child: CircularGraph(
-                      remainingTime: remainingTime,
-                      totalTime: totalTime,
-                      size: 300,
-                    ),
+                SizedBox(height: spacing * 2),
+                SizedBox(
+                  width: graphSize,
+                  height: graphSize,
+                  child: CircularGraph(
+                    remainingTime: remainingTime,
+                    totalTime: totalTime,
+                    size: graphSize,
                   ),
+                ),
+                SizedBox(height: spacing * 2),
+                // 示例按钮 - 你可以根据需要添加更多按钮
+                Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text('开始'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                      ),
+                      onPressed: () {
+                        // 添加开始逻辑
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          // 右上角全屏按钮
-          Positioned(
-            top: 16,
-            right: 16,
-            child: IconButton(
-              icon: Icon(
-                _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
-                size: 28,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isFullScreen = !_isFullScreen;
-                });
-              },
+          );
+        },
+      ),
+      // 将全屏按钮移到 AppBar
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+              size: 28,
             ),
+            onPressed: () {
+              setState(() {
+                _isFullScreen = !_isFullScreen;
+              });
+            },
           ),
         ],
       ),

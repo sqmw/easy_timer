@@ -73,6 +73,21 @@ class AppTheme {
       dividerTheme: const DividerThemeData(
         color: AppColors.divider,
       ),
+      // 添加侧边栏主题设置
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: primary,
+        selectedIconTheme: const IconThemeData(color: AppColors.textOnPrimary),
+        unselectedIconTheme: IconThemeData(color: AppColors.textOnPrimary.withOpacity(0.7)),
+        selectedLabelTextStyle: const TextStyle(color: AppColors.textOnPrimary),
+        unselectedLabelTextStyle: TextStyle(color: AppColors.textOnPrimary.withOpacity(0.7)),
+        indicatorColor: AppColors.textOnPrimary.withOpacity(0.2),
+      ),
+      // 添加底部导航栏主题
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: primary,
+        selectedItemColor: AppColors.textOnPrimary,
+        unselectedItemColor: AppColors.textOnPrimary.withOpacity(0.7),
+      ),
     );
   }
 
@@ -116,7 +131,6 @@ class AppTheme {
         color: AppColors.textOnPrimary,
       ),
       // 修改按钮主题，使用动态颜色
-      // 亮色主题中的按钮和导航栏主题
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
@@ -141,6 +155,12 @@ class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: primary,
         foregroundColor: AppColors.textOnPrimary,
+      ),
+      // 添加底部导航栏主题
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: primary,
+        selectedItemColor: AppColors.textOnPrimary,
+        unselectedItemColor: AppColors.textOnPrimary.withOpacity(0.7),
       ),
       // 修改开关主题，使用动态颜色
       switchTheme: SwitchThemeData(

@@ -3,18 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:easy_timer/models/timer_item.dart';
 import 'package:provider/provider.dart';
 
+// 在 TimerListItem 类中添加 onEdit 回调
 class TimerListItem extends StatelessWidget {
   final TimerItem timer;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback onEdit; // 添加编辑回调
 
   const TimerListItem({
     super.key,
     required this.timer,
     required this.onTap,
     required this.onDelete,
+    required this.onEdit, // 添加到构造函数参数中
   });
-
+  
   @override
   // 在计时器列表项中添加开始时间显示
   Widget build(BuildContext context) {
@@ -75,8 +78,6 @@ class TimerListItem extends StatelessWidget {
             Expanded(
               child: Text(timer.name, style: theme.textTheme.titleMedium),
             ),
-            // 将状态标签改为可点击的组件
-            statusWidget,
           ],
         ),
         subtitle: Column(
@@ -92,21 +93,6 @@ class TimerListItem extends StatelessWidget {
                       style: TextStyle(color: theme.colorScheme.primary),
                     ),
                   ),
-                  // 添加一个刷新按钮，用于手动刷新状态显示
-                  if (timer.startTime!.isAfter(DateTime.now()))
-                    IconButton(
-                      icon: const Icon(Icons.refresh, size: 16),
-                      onPressed: () {
-                        // 使用 Provider 强制刷新
-                        Provider.of<TimerProvider>(
-                          context,
-                          listen: false,
-                        ).notifyListeners();
-                      },
-                      tooltip: '刷新倒计时',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
                 ],
               ),
           ],
@@ -114,12 +100,19 @@ class TimerListItem extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            statusWidget,
+            // 添加编辑按钮
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: onEdit,
+              tooltip: '编辑',
+            ),
             // 启用/禁用开关
             Switch(
-                value: timer.isEnabled,
-                onChanged: (value) {
-                  // 需要在 timer_list_page.dart 中添加 onEnabledChanged 回调
-                  Provider.of<TimerProvider>(
+              value: timer.isEnabled,
+              onChanged: (value) {
+                // 需要在 timer_list_page.dart 中添加 onEnabledChanged 回调
+                Provider.of<TimerProvider>(
                       context,
                       listen: false,
                     ).updateTimer(timer.copyWith(isEnabled: value));

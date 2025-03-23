@@ -67,6 +67,9 @@ class MyApp extends StatelessWidget {
           return AppTheme.lightTheme(primaryColor: Colors.orange);
         case ThemeStyle.green:
           return AppTheme.lightTheme(primaryColor: Colors.green);
+        case ThemeStyle.pink:
+          // 使用樱花粉色 (#FFB7C5) 替代普通粉色
+          return AppTheme.lightTheme(primaryColor: const Color(0xFFFFB7C5));
       }
     } else {
       // 暗色主题
@@ -79,6 +82,9 @@ class MyApp extends StatelessWidget {
           return AppTheme.darkTheme(primaryColor: Colors.orange);
         case ThemeStyle.green:
           return AppTheme.darkTheme(primaryColor: Colors.green);
+        case ThemeStyle.pink:
+          // 使用樱花粉色 (#FFB7C5) 替代普通粉色
+          return AppTheme.darkTheme(primaryColor: const Color(0xFFFFB7C5));
       }
     }
   }

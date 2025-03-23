@@ -5,7 +5,6 @@ import 'package:easy_timer/pages/number_style/number_style_page.dart';
 import 'package:easy_timer/pages/chart_style/chart_style_page.dart';
 import 'package:easy_timer/pages/about/about_page.dart';
 import 'package:easy_timer/pages/settings/settings_page.dart';
-import 'package:easy_timer/theme/app_colors.dart';
 
 class AppLayout extends StatefulWidget {
   const AppLayout({super.key});
@@ -29,12 +28,15 @@ class _AppLayoutState extends State<AppLayout> {
 
   @override
   Widget build(BuildContext context) {
+    // 获取当前主题
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: Stack(
         children: [
           Row(
             children: [
-              // 左侧导航栏
+              // 左侧导航栏 - 使用主题颜色
               NavigationRail(
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: (int index) {
@@ -45,30 +47,23 @@ class _AppLayoutState extends State<AppLayout> {
                 extended: _isExtended,
                 minWidth: 80,
                 minExtendedWidth: 200,
-                backgroundColor: AppColors.primary,
+                // 使用主题颜色
+                backgroundColor: theme.colorScheme.primary,
                 useIndicator: true,
-                indicatorColor: AppColors.indicatorOnPrimary,
+                // 使用主题中定义的指示器颜色
+                indicatorColor: theme.navigationRailTheme.indicatorColor,
                 indicatorShape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(24)),
                 ),
-                selectedIconTheme: const IconThemeData(
-                  color: AppColors.textOnPrimary,
-                  size: 24,
-                ),
-                unselectedIconTheme: const IconThemeData(
-                  color: AppColors.textSecondaryOnPrimary,
-                  size: 22,
-                ),
-                selectedLabelTextStyle: const TextStyle(
-                  color: AppColors.textOnPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500, // 稍微加粗
-                  letterSpacing: 0.2, // 轻微增加字间距
-                ),
-                unselectedLabelTextStyle: const TextStyle(
-                  color: AppColors.textSecondaryOnPrimary,
-                  fontSize: 16,
-                ),
+                // 使用主题中定义的图标主题
+                selectedIconTheme: theme.navigationRailTheme.selectedIconTheme,
+                unselectedIconTheme:
+                    theme.navigationRailTheme.unselectedIconTheme,
+                // 使用主题中定义的文本样式
+                selectedLabelTextStyle:
+                    theme.navigationRailTheme.selectedLabelTextStyle,
+                unselectedLabelTextStyle:
+                    theme.navigationRailTheme.unselectedLabelTextStyle,
                 destinations: const [
                   NavigationRailDestination(
                     padding: EdgeInsets.symmetric(vertical: 12),
@@ -105,34 +100,30 @@ class _AppLayoutState extends State<AppLayout> {
               if (_isExtended)
                 Container(
                   width: 1,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        AppColors.primaryWithOpacity20,
-                        AppColors.primary,
-                        AppColors.primaryWithOpacity20,
+                        theme.colorScheme.primary.withOpacity(0.2),
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withOpacity(0.2),
                       ],
                     ),
                   ),
                 ),
-              // 修改 Expanded 中的内容
+              // 修改 Expanded 中的内容，使用主题颜色
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.backgroundLight, AppColors.backgroundDark],
-                    ),
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor,
                   ),
                   child: _pages[_selectedIndex],
                 ),
               ),
             ],
           ),
-          // 收缩按钮
+          // 收缩按钮 - 使用主题颜色
           Positioned(
             left: _isExtended ? 205 : 85,
             top: 12,
@@ -141,7 +132,7 @@ class _AppLayoutState extends State<AppLayout> {
               constraints: const BoxConstraints(),
               icon: Icon(
                 _isExtended ? Icons.chevron_left : Icons.chevron_right,
-                color: AppColors.textOnPrimary,
+                color: theme.navigationRailTheme.selectedIconTheme?.color,
                 size: 24,
               ),
               onPressed: () {
