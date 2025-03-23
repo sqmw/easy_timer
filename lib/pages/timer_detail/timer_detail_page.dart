@@ -68,134 +68,137 @@ class _TimerDetailPageState extends State<TimerDetailPage> {
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // 计算合适的尺寸
-          final screenWidth = constraints.maxWidth;
-          final screenHeight = constraints.maxHeight;
-          final minDimension =
-              screenWidth < screenHeight ? screenWidth : screenHeight;
+      body: SafeArea(  // 添加 SafeArea 避免系统区域遮挡
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // 计算合适的尺寸
+            final screenWidth = constraints.maxWidth;
+            final screenHeight = constraints.maxHeight;
+            final minDimension =
+                screenWidth < screenHeight ? screenWidth : screenHeight;
 
-          // 计算各组件的大小
-          final graphSize = minDimension * 0.5; // 圆形图表占据60%的最小边长
-          final spacing = minDimension * 0.03; // 间距为3%
+            // 计算各组件的大小 - 减小尺寸以避免溢出
+            final graphSize = minDimension * 0.4; // 减小图表尺寸
+            final spacing = minDimension * 0.02; // 减小间距
 
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // 添加总时长显示
-                Text(
-                  '总时长: ${_formatDuration(totalTime)}',
-                  style: TextStyle(
-                    fontSize: minDimension * 0.04, // 字体大小随屏幕变化
-                    fontWeight: FontWeight.w500,
+            return SingleChildScrollView(  // 添加滚动视图防止溢出
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // 添加总时长显示
+                      Text(
+                        '总时长: ${_formatDuration(totalTime)}',
+                        style: TextStyle(
+                          fontSize: minDimension * 0.04,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: spacing),
+                      FlipTimerDisplay(
+                        remainingTime: remainingTime,
+                        isFullScreen: _isFullScreen,
+                      ),
+                      SizedBox(height: spacing * 2),
+                      SizedBox(
+                        width: graphSize,
+                        height: graphSize,
+                        child: CircularGraph(
+                          remainingTime: remainingTime,
+                          totalTime: totalTime,
+                          size: graphSize,
+                        ),
+                      ),
+                      SizedBox(height: spacing * 2),
+                      // 控制按钮 - 使用 Wrap 优化按钮布局
+                      Wrap(
+                        spacing: spacing,
+                        runSpacing: spacing,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          if (!isRunning && !isCompleted)
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.play_arrow),
+                              label: const Text('开始'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
+                              ),
+                              onPressed: () {
+                                timerProvider.startTimer(widget.timer.id);
+                              },
+                            ),
+                          if (isRunning)
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.pause),
+                              label: const Text('暂停'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
+                              ),
+                              onPressed: () {
+                                timerProvider.pauseTimer();
+                              },
+                            ),
+                          if (isPaused)
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.play_arrow),
+                              label: const Text('继续'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
+                              ),
+                              onPressed: () {
+                                timerProvider.resumeTimer();
+                              },
+                            ),
+                          if (isRunning || isPaused)
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.stop),
+                              label: const Text('停止'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.error,
+                                foregroundColor: theme.colorScheme.onError,
+                              ),
+                              onPressed: () {
+                                timerProvider.stopTimer();
+                              },
+                            ),
+                          if (isPaused)
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('重置'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.secondary,
+                                foregroundColor: theme.colorScheme.onSecondary,
+                              ),
+                              onPressed: () {
+                                timerProvider.resetTimer();
+                              },
+                            ),
+                          if (isCompleted)
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('重新开始'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
+                              ),
+                              onPressed: () {
+                                timerProvider.resetTimer();
+                              },
+                            ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: spacing),
-                FlipTimerDisplay(
-                  remainingTime: remainingTime,
-                  isFullScreen: _isFullScreen,
-                ),
-                SizedBox(height: spacing * 2),
-                SizedBox(
-                  width: graphSize,
-                  height: graphSize,
-                  child: CircularGraph(
-                    remainingTime: remainingTime,
-                    totalTime: totalTime,
-                    size: graphSize,
-                  ),
-                ),
-                SizedBox(height: spacing * 2),
-                // 控制按钮
-                Wrap(
-                  spacing: spacing,
-                  runSpacing: spacing,
-                  alignment: WrapAlignment.center,
-                  children: [
-                    if (!isRunning && !isCompleted)
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text('开始'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                        ),
-                        onPressed: () {
-                          timerProvider.startTimer(widget.timer.id);
-                        },
-                      ),
-                    if (isRunning)
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.pause),
-                        label: const Text('暂停'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                        ),
-                        onPressed: () {
-                          timerProvider.pauseTimer();
-                        },
-                      ),
-                    if (isPaused)
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text('继续'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                        ),
-                        onPressed: () {
-                          timerProvider.resumeTimer();
-                        },
-                      ),
-                    const SizedBox(width: 16),
-                    if (isRunning || isPaused)
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.stop),
-                        label: const Text('停止'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.error,
-                          foregroundColor: theme.colorScheme.onError,
-                        ),
-                        onPressed: () {
-                          timerProvider.stopTimer();
-                        },
-                      ),
-                    if (isPaused)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16),
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('重置'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.secondary,
-                            foregroundColor: theme.colorScheme.onSecondary,
-                          ),
-                          onPressed: () {
-                            timerProvider.resetTimer();
-                          },
-                        ),
-                      ),
-                    if (isCompleted)
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('重新开始'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                        ),
-                        onPressed: () {
-                          timerProvider.resetTimer();
-                        },
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }

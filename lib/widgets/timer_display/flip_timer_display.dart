@@ -16,7 +16,7 @@ class FlipTimerDisplay extends StatefulWidget {
 }
 
 class _FlipTimerDisplayState extends State<FlipTimerDisplay> with TickerProviderStateMixin {
-  late Timer _timer;
+  Timer? _timer;
   late Duration _currentTime;
   Map<String, AnimationController> _controllers = {};
   Map<String, Animation<double>> _animations = {};
@@ -32,7 +32,7 @@ class _FlipTimerDisplayState extends State<FlipTimerDisplay> with TickerProvider
     super.initState();
     _currentTime = widget.remainingTime;
     _initAnimations();
-    _startTimer();
+    // _startTimer();
   }
 
   void _initAnimations() {
@@ -59,7 +59,7 @@ class _FlipTimerDisplayState extends State<FlipTimerDisplay> with TickerProvider
           _currentTime = _currentTime - const Duration(seconds: 1);
           _updateDisplay();
         } else {
-          _timer.cancel();
+          _timer?.cancel();
         }
       });
     });
@@ -105,7 +105,7 @@ class _FlipTimerDisplayState extends State<FlipTimerDisplay> with TickerProvider
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     for (var controller in _controllers.values) {
       controller.dispose();
     }

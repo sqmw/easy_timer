@@ -16,14 +16,14 @@ abstract class BaseTimerGraph extends StatefulWidget {
 }
 
 abstract class BaseTimerGraphState<T extends BaseTimerGraph> extends State<T> {
-  late Timer _timer;
+  Timer? _timer;
   late Duration _currentTime;
 
   @override
   void initState() {
     super.initState();
     _currentTime = widget.remainingTime;
-    _startTimer();
+    // _startTimer(); //取消自启动
   }
 
   @override
@@ -41,14 +41,14 @@ abstract class BaseTimerGraphState<T extends BaseTimerGraph> extends State<T> {
           _currentTime = _currentTime - const Duration(seconds: 1);
         });
       } else {
-        _timer.cancel();
+        _timer?.cancel();
       }
     });
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 

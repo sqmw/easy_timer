@@ -162,264 +162,187 @@ class _TimerEditPageState extends State<TimerEditPage> {
           IconButton(icon: const Icon(Icons.check), onPressed: _saveTimer),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  // 名称输入
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: '计时器名称',
-                      hintText: '输入计时器名称',
-                      prefixIcon: Icon(Icons.title),
+      body: SafeArea(  // 添加 SafeArea 包裹内容
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),  // 调整内边距
+                  children: [
+                    // 名称输入
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: '计时器名称',
+                        hintText: '输入计时器名称',
+                        prefixIcon: Icon(Icons.title),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return '请输入计时器名称';
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '请输入计时器名称';
-                      }
-                      return null;
-                    },
-                  ),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 20),  // 减小间距
 
-                  // 时间设置
-                  Text('时长设置', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 8),
+                    // 时间设置
+                    Text('时长设置', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // 小时
-                      Column(
-                        children: [
-                          const Text('小时'),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: 80,
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                child: Column(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.arrow_upward),
-                                      onPressed: () {
-                                        setState(() {
-                                          _hours = (_hours + 1) % 24;
-                                        });
-                                      },
-                                    ),
-                                    Text(
-                                      '$_hours',
-                                      style: theme.textTheme.headlineMedium,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.arrow_downward),
-                                      onPressed: () {
-                                        setState(() {
-                                          _hours = (_hours - 1 + 24) % 24;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                    // 修改时间选择器布局，使其更紧凑
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        // 小时
+                        _buildTimeSelector('小时', _hours, (value) => setState(() => _hours = value), 24),
+                        // 分钟
+                        _buildTimeSelector('分钟', _minutes, (value) => setState(() => _minutes = value), 60),
+                        // 秒钟
+                        _buildTimeSelector('秒钟', _seconds, (value) => setState(() => _seconds = value), 60),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),  // 减小间距
+
+                    // 自动开始开关
+                    SwitchListTile(
+                      title: const Text('是否启用'),
+                      subtitle: const Text('启用后系统将实时统计计时器状态'),
+                      value: _isEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _isEnabled = value;
+                        });
+                      },
+                    ),
+
+                    // 开始时间选择
+                    if (_isEnabled)  // 只在启用时显示开始时间选择
+                      ListTile(
+                        title: const Text('开始时间'),
+                        subtitle: Text(
+                          _startTime != null
+                              ? '${_startTime!.year}-${_startTime!.month.toString().padLeft(2, '0')}-${_startTime!.day.toString().padLeft(2, '0')} ${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}'
+                              : '保存后立即开始',
+                        ),
+                        trailing: const Icon(Icons.access_time),
+                        onTap: _selectStartTime,
                       ),
 
-                      // 分钟
-                      Column(
-                        children: [
-                          const Text('分钟'),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: 80,
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                child: Column(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.arrow_upward),
-                                      onPressed: () {
-                                        setState(() {
-                                          _minutes = (_minutes + 1) % 60;
-                                        });
-                                      },
-                                    ),
-                                    Text(
-                                      '$_minutes',
-                                      style: theme.textTheme.headlineMedium,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.arrow_downward),
-                                      onPressed: () {
-                                        setState(() {
-                                          _minutes = (_minutes - 1 + 60) % 60;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // 秒钟
-                      Column(
-                        children: [
-                          const Text('秒钟'),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: 80,
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                child: Column(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.arrow_upward),
-                                      onPressed: () {
-                                        setState(() {
-                                          _seconds = (_seconds + 1) % 60;
-                                        });
-                                      },
-                                    ),
-                                    Text(
-                                      '$_seconds',
-                                      style: theme.textTheme.headlineMedium,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.arrow_downward),
-                                      onPressed: () {
-                                        setState(() {
-                                          _seconds = (_seconds - 1 + 60) % 60;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // 自动开始开关
-                  // 在自动开始开关后添加开始时间选择器
-                  SwitchListTile(
-                    title: const Text('是否启用'),
-                    subtitle: const Text('启用后系统将实时统计计时器状态'),
-                    value: _isEnabled, // 修改变量名
-                    onChanged: (value) {
-                      setState(() {
-                        _isEnabled = value; // 修改变量名
-                      });
-                    },
-                  ),
-
-                  ...[
                     const SizedBox(height: 16),
-                    ListTile(
-                      title: const Text('开始时间'),
-                      subtitle: Text(
-                        _startTime != null
-                            ? '${_startTime!.year}-${_startTime!.month.toString().padLeft(2, '0')}-${_startTime!.day.toString().padLeft(2, '0')} ${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}'
-                            : '保存后立即开始',
-                      ),
-                      trailing: const Icon(Icons.access_time),
-                      onTap: _selectStartTime,
+
+                    // 声音选择
+                    Text('提醒声音', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+
+                    // 声音选择器
+                    Builder(
+                      builder: (context) {
+                        // 获取当前选择的声音
+                        final currentSound = notificationProvider.availableSounds
+                            .firstWhere(
+                              (sound) => sound.id == _soundId,
+                              orElse: () => notificationProvider.defaultSound,
+                            );
+
+                        return ListTile(
+                          leading: Icon(currentSound.icon),
+                          title: Text(currentSound.name),
+                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          onTap: () async {
+                            // 显示声音选择对话框
+                            showDialog(
+                              context: context,
+                              builder: (context) => SoundSelectorDialog(
+                                initialSoundId: _soundId,
+                                onSoundSelected: (soundId) {
+                                  setState(() {
+                                    _soundId = soundId;
+                                  });
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
                   ],
+                ),
+              ),
 
-                  const SizedBox(height: 16),
-
-                  // 声音选择
-                  Text('提醒声音', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 8),
-
-                  // 替换原来的下拉菜单为自定义选择器
-                  Builder(
-                    builder: (context) {
-                      // 获取当前选择的声音
-                      final currentSound = notificationProvider.availableSounds
-                          .firstWhere(
-                            (sound) => sound.id == _soundId,
-                            orElse: () => notificationProvider.defaultSound,
-                          );
-
-                      return ListTile(
-                        leading: Icon(currentSound.icon),
-                        title: Text(currentSound.name),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(
-                            color: Theme.of(context).dividerColor,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        onTap: () async {
-                          // 显示声音选择对话框
-                          showDialog(
-                            context: context,
-                            builder:
-                                (context) => SoundSelectorDialog(
-                                  initialSoundId: _soundId,
-                                  onSoundSelected: (soundId) {
-                                    setState(() {
-                                      _soundId = soundId;
-                                    });
-                                  },
-                                ),
-                          );
-                        },
-                      );
+              // 添加底部保存按钮
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _saveTimer,
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('保存', style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // 添加一个辅助方法来创建时间选择器，减少重复代码
+  Widget _buildTimeSelector(String label, int value, Function(int) onChanged, int maxValue) {
+    return Column(
+      children: [
+        Text(label),
+        const SizedBox(height: 4),  // 减小间距
+        SizedBox(
+          width: 70,  // 减小宽度
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),  // 减小内边距
+              child: Column(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_upward, size: 20),  // 减小图标
+                    padding: const EdgeInsets.all(4),  // 减小内边距
+                    constraints: const BoxConstraints(),  // 移除默认约束
+                    onPressed: () {
+                      onChanged((value + 1) % maxValue);
+                    },
+                  ),
+                  Text(
+                    '$value',
+                    style: Theme.of(context).textTheme.titleLarge,  // 使用较小的文本样式
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_downward, size: 20),  // 减小图标
+                    padding: const EdgeInsets.all(4),  // 减小内边距
+                    constraints: const BoxConstraints(),  // 移除默认约束
+                    onPressed: () {
+                      onChanged((value - 1 + maxValue) % maxValue);
                     },
                   ),
                 ],
               ),
             ),
-
-            // 添加底部保存按钮
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _saveTimer,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('保存', style: TextStyle(fontSize: 16)),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

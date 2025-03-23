@@ -5,6 +5,8 @@ import 'package:easy_timer/pages/number_style/number_style_page.dart';
 import 'package:easy_timer/pages/chart_style/chart_style_page.dart';
 import 'package:easy_timer/pages/about/about_page.dart';
 import 'package:easy_timer/pages/settings/settings_page.dart';
+import 'package:provider/provider.dart';
+import 'package:easy_timer/providers/theme_provider.dart';
 
 class AppLayout extends StatefulWidget {
   const AppLayout({super.key});
@@ -30,6 +32,7 @@ class _AppLayoutState extends State<AppLayout> {
   Widget build(BuildContext context) {
     // 获取当前主题
     final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       body: Stack(
@@ -112,13 +115,17 @@ class _AppLayoutState extends State<AppLayout> {
                     ),
                   ),
                 ),
-              // 修改 Expanded 中的内容，使用主题颜色
+              // 修改内容区域，使用与设置页面一致的风格
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor,
+                    // 使用主题提供者中定义的背景色
+                    color: themeProvider.currentBackgroundColor,
                   ),
-                  child: _pages[_selectedIndex],
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: _pages[_selectedIndex],
+                  ),
                 ),
               ),
             ],
@@ -127,19 +134,28 @@ class _AppLayoutState extends State<AppLayout> {
           Positioned(
             left: _isExtended ? 205 : 85,
             top: 12,
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              icon: Icon(
-                _isExtended ? Icons.chevron_left : Icons.chevron_right,
-                color: theme.navigationRailTheme.selectedIconTheme?.color,
-                size: 24,
+            child: Card(
+              color: theme.colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
               ),
-              onPressed: () {
-                setState(() {
-                  _isExtended = !_isExtended;
-                });
-              },
+              elevation: 4.0,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12.0),
+                onTap: () {
+                  setState(() {
+                    _isExtended = !_isExtended;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Icon(
+                    _isExtended ? Icons.chevron_left : Icons.chevron_right,
+                    color: theme.navigationRailTheme.selectedIconTheme?.color,
+                    size: 20,
+                  ),
+                ),
+              ),
             ),
           ),
         ],

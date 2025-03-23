@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_timer/providers/timer_provider.dart';
 import 'package:easy_timer/widgets/timer_list_item.dart';
+// 导入自定义对话框组件
+import 'package:easy_timer/widgets/custom_alert_dialog.dart';
 
 class TimerListPage extends StatelessWidget {
   const TimerListPage({super.key});
@@ -220,8 +222,8 @@ class TimerListPage extends StatelessWidget {
                         );
                       },
                       onDelete: () {
-                        // 删除逻辑保持不变
-                        // ...
+                        // 使用自定义对话框
+                        _showDeleteConfirmDialog(context, provider, timer);
                       },
                     );
                   },
@@ -249,4 +251,62 @@ class TimerListPage extends StatelessWidget {
       ),
     );
   }
+}
+
+// 在 TimerListPage 类中添加这个方法
+void _showDeleteConfirmDialog(BuildContext context, TimerProvider provider, timer) {
+  final theme = Theme.of(context);
+  
+  CustomAlertDialog.show(
+    context: context,
+    title: '删除计时器',
+    titleIcon: Icons.delete_outline,
+    titleIconColor: theme.colorScheme.error,
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '确定要删除"${timer.name}"吗？',
+          style: theme.textTheme.bodyLarge,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '此操作无法撤销',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.error.withOpacity(0.8),
+          ),
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () {
+          Navigator.of(context).pop(); // 关闭对话框
+        },
+        child: const Text('取消'),
+      ),
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: theme.colorScheme.error,
+          foregroundColor: theme.colorScheme.onError,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onPressed: () {
+          provider.deleteTimer(timer.id);
+          Navigator.of(context).pop(); // 关闭对话框
+        },
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.delete_outline, size: 20),
+            const SizedBox(width: 8),
+            const Text('删除'),
+          ],
+        ),
+      ),
+    ],
+  );
 }
