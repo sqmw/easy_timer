@@ -1,23 +1,161 @@
 import 'package:easy_timer/pages/timer_detail/timer_detail_page.dart';
 import 'package:easy_timer/pages/timer_edit/timer_edit_page.dart';
+import 'package:easy_timer/widgets/custom_alert_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_timer/providers/timer_provider.dart';
 import 'package:easy_timer/widgets/timer_list_item.dart';
-// 导入自定义对话框组件
-import 'package:easy_timer/widgets/custom_alert_dialog.dart';
+import 'package:easy_timer/providers/notification_provider.dart';
+import 'package:easy_timer/models/timer_item.dart';
 
-class TimerListPage extends StatelessWidget {
+class TimerListPage extends StatefulWidget {
   const TimerListPage({super.key});
+
+  @override
+  State<TimerListPage> createState() => _TimerListPageState();
+}
+
+class _TimerListPageState extends State<TimerListPage> {
+  final searchController = TextEditingController();
+  bool isAscending = true;
+  String currentSortBy = 'created';
+  // Add a reference to store the TimerProvider
+  late TimerProvider _timerProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Safely get the provider reference when dependencies change
+    _timerProvider = Provider.of<TimerProvider>(context, listen: false);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 设置自动启动提醒回调
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _timerProvider.setAutoStartReminderCallback(_showAutoStartReminderDialog);
+
+      // 监听计时器完成事件
+      _timerProvider.addListener(_handleTimerStateChange);
+    });
+  }
+
+  @override
+  void dispose() {
+    // 移除监听器 - use the stored reference instead of Provider.of
+    _timerProvider.removeListener(_handleTimerStateChange);
+    searchController.dispose();
+    super.dispose();
+  }
+
+  // 处理计时器状态变化
+  void _handleTimerStateChange() {
+    final timerProvider = Provider.of<TimerProvider>(context, listen: false);
+
+    // 如果计时器完成，显示完成对话框
+    if (timerProvider.isCompleted && timerProvider.activeTimer != null) {
+      _showCompletionDialog(context, timerProvider.activeTimer!);
+    }
+  }
+
+  // 显示自动启动提醒对话框
+  void _showAutoStartReminderDialog(TimerItem timer) {
+    final theme = Theme.of(context);
+
+    // 使用自定义对话框显示提醒
+    CustomAlertDialog.show(
+      context: context,
+      barrierDismissible: false, // 防止点击外部关闭对话框
+      title: '计时器即将开始',
+      titleIcon: Icons.timer,
+      titleIconColor: theme.colorScheme.primary,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '计时器 "${timer.name}" 将在10秒后自动开始',
+            style: theme.textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '时长: ${_formatDuration(timer.duration)}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // 关闭对话框
+            // 推迟10分钟
+            Provider.of<TimerProvider>(
+              context,
+              listen: false,
+            ).snoozeTimer(timer.id);
+
+            // 显示推迟提示
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('已推迟10分钟'),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.snooze, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              const Text('推迟10分钟'),
+            ],
+          ),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          onPressed: () {
+            Navigator.of(context).pop(); // 关闭对话框
+            // 立即开始
+            Provider.of<TimerProvider>(
+              context,
+              listen: false,
+            ).startTimer(timer.id);
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.play_arrow,
+                size: 20,
+                color: theme.colorScheme.onPrimary,
+              ),
+              const SizedBox(width: 8),
+              const Text('立即开始'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // 添加搜索控制器
-    final searchController = TextEditingController();
 
-    /// 如果放在 StateBuilder下面，会导致排序按钮该状态随着刷新变化
-    bool isAscending = true;
     return Scaffold(
       body: Column(
         children: [
@@ -48,14 +186,14 @@ class TimerListPage extends StatelessWidget {
                             final searchText = searchController.text.trim();
                             if (searchText.isNotEmpty) {
                               Provider.of<TimerProvider>(
-                                context, 
-                                listen: false
+                                context,
+                                listen: false,
                               ).searchTimers(searchText);
                             } else {
                               // 如果搜索框为空，则重置搜索结果
                               Provider.of<TimerProvider>(
-                                context, 
-                                listen: false
+                                context,
+                                listen: false,
                               ).resetSearch();
                             }
                           },
@@ -70,8 +208,8 @@ class TimerListPage extends StatelessWidget {
                           onPressed: () {
                             searchController.clear();
                             Provider.of<TimerProvider>(
-                              context, 
-                              listen: false
+                              context,
+                              listen: false,
                             ).resetSearch();
                           },
                         ),
@@ -92,13 +230,13 @@ class TimerListPage extends StatelessWidget {
                       onChanged: (value) {
                         if (value.isNotEmpty) {
                           Provider.of<TimerProvider>(
-                            context, 
-                            listen: false
+                            context,
+                            listen: false,
                           ).searchTimers(value);
                         } else {
                           Provider.of<TimerProvider>(
-                            context, 
-                            listen: false
+                            context,
+                            listen: false,
                           ).resetSearch();
                         }
                       },
@@ -108,7 +246,6 @@ class TimerListPage extends StatelessWidget {
                 const SizedBox(width: 16),
                 StatefulBuilder(
                   builder: (context, setState) {
-                    String currentSortBy = 'created'; // 默认按创建时间排序
                     return Row(
                       children: [
                         // 排序方式选择
@@ -251,62 +388,166 @@ class TimerListPage extends StatelessWidget {
       ),
     );
   }
-}
 
-// 在 TimerListPage 类中添加这个方法
-void _showDeleteConfirmDialog(BuildContext context, TimerProvider provider, timer) {
-  final theme = Theme.of(context);
-  
-  CustomAlertDialog.show(
-    context: context,
-    title: '删除计时器',
-    titleIcon: Icons.delete_outline,
-    titleIconColor: theme.colorScheme.error,
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '确定要删除"${timer.name}"吗？',
-          style: theme.textTheme.bodyLarge,
+  // 显示删除确认对话框
+  void _showDeleteConfirmDialog(
+    BuildContext context,
+    TimerProvider provider,
+    timer,
+  ) {
+    final theme = Theme.of(context);
+
+    CustomAlertDialog.show(
+      context: context,
+      title: '删除计时器',
+      titleIcon: Icons.delete_outline,
+      titleIconColor: theme.colorScheme.error,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('确定要删除"${timer.name}"吗？', style: theme.textTheme.bodyLarge),
+          const SizedBox(height: 8),
+          Text(
+            '此操作无法撤销',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error.withOpacity(0.8),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // 关闭对话框
+          },
+          child: const Text('取消'),
         ),
-        const SizedBox(height: 8),
-        Text(
-          '此操作无法撤销',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.error.withOpacity(0.8),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.error,
+            foregroundColor: theme.colorScheme.onError,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          onPressed: () {
+            provider.deleteTimer(timer.id);
+            Navigator.of(context).pop(); // 关闭对话框
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.delete_outline, size: 20),
+              const SizedBox(width: 8),
+              const Text('删除'),
+            ],
           ),
         ),
       ],
-    ),
-    actions: [
-      TextButton(
-        onPressed: () {
-          Navigator.of(context).pop(); // 关闭对话框
-        },
-        child: const Text('取消'),
+    );
+  }
+
+  // 添加计时器完成对话框
+  void _showCompletionDialog(BuildContext context, TimerItem timer) {
+    final theme = Theme.of(context);
+
+    CustomAlertDialog.show(
+      context: context,
+      barrierDismissible: false,
+      title: '计时完成',
+      titleIcon: Icons.notifications_active,
+      titleIconColor: theme.colorScheme.primary,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('您设置的倒计时已完成', style: theme.textTheme.bodyLarge),
+          const SizedBox(height: 8),
+          Text(
+            '总时长: ${_formatDuration(timer.duration)}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
-      ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: theme.colorScheme.error,
-          foregroundColor: theme.colorScheme.onError,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            // 推迟10分钟
+            Provider.of<TimerProvider>(
+              context,
+              listen: false,
+            ).snoozeTimer(timer.id);
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('已推迟10分钟'),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.snooze, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              const Text('推迟10分钟'),
+            ],
           ),
         ),
-        onPressed: () {
-          provider.deleteTimer(timer.id);
-          Navigator.of(context).pop(); // 关闭对话框
-        },
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.delete_outline, size: 20),
-            const SizedBox(width: 8),
-            const Text('删除'),
-          ],
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+            // 停止声音播放
+            Provider.of<NotificationProvider>(
+              context,
+              listen: false,
+            ).stopSound();
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 20,
+                color: theme.colorScheme.onPrimary,
+              ),
+              const SizedBox(width: 8),
+              const Text('确认'),
+            ],
+          ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
+
+  // 格式化时间显示
+  String _formatDuration(Duration duration) {
+    final days = duration.inDays;
+    final hours = duration.inHours.remainder(24);
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    final parts = <String>[];
+    if (days > 0) parts.add('$days天');
+    if (hours > 0) parts.add('$hours小时');
+    if (minutes > 0) parts.add('$minutes分钟');
+    if (seconds > 0) parts.add('$seconds秒');
+
+    return parts.isEmpty ? '0秒' : parts.join(' ');
+  }
 }

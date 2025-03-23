@@ -1,4 +1,5 @@
 import 'package:easy_timer/models/timer_item.dart';
+import 'package:easy_timer/providers/config_provider.dart';
 import 'package:easy_timer/providers/timer_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,8 +12,11 @@ import 'package:easy_timer/providers/notification_provider.dart';
 import 'package:easy_timer/providers/update_provider.dart';
 import 'package:easy_timer/theme/app_theme.dart'; // 添加新的主题导入
 
-// 在应用初始化时设置自动启动提醒回调
-void main() {
+final ConfigProvider configProvider = ConfigProvider();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // 初始化配置
+  await configProvider.init();
   runApp(const MyApp());
 }
 
@@ -27,6 +31,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => UpdateProvider()),
+        // 在 MultiProvider 中确保 TimerProvider 在 NotificationProvider 之后初始化
         ChangeNotifierProxyProvider<NotificationProvider, TimerProvider>(
           create: (_) => TimerProvider(),
           update: (_, notificationProvider, timerProvider) {
@@ -35,6 +40,7 @@ class MyApp extends StatelessWidget {
             return timerProvider;
           },
         ),
+        ChangeNotifierProvider(create: (_) => configProvider),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
