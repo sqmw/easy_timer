@@ -1,10 +1,10 @@
 # Easy Timer
-
+```
 @auther: sqmw
 @github: https://github.com/sqmw/
 @email: sq17127401791@gmail.com
 @version: 1.0.0
-
+```
 一个功能强大的 Flutter 计时器应用，提供优雅的界面和丰富的计时功能。
 
 ## 应用预览
@@ -20,6 +20,7 @@
 - 铃声提醒功能 - 90%
 - 图形化显示 - 50%
 - 主题定制 - 20%
+- 番茄专注统计 - 0%
 - 多语言支持 - 0%
 
 ### 用户界面
